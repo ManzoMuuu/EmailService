@@ -1,0 +1,25 @@
+# Cartelle generate da build
+bin/
+obj/
+.vs/
+.vscode/
+
+# File compilati
+*.dll
+*.exe
+*.pdb
+
+# File di configurazione con credenziali
+**/appsettings.Development.json
+**/appsettings.Production.json
+
+# File di log
+logs/
+*.log
+
+# Pacchetti NuGet
+**/packages/*
+*.nupkg
+
+# File di test generati
+TestResults/
