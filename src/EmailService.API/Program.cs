@@ -1,6 +1,8 @@
 using EmailService.Core.Interfaces;
 using EmailService.Core.Models;
 using EmailService.Infrastructure.Services;
+using EmailService.Infrastructure.Configuration;
+using Microsoft.Win32;
 using Serilog;
 using Serilog.Events;
 
@@ -11,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Configuration.AddWindowsRegistry(
+    "SOFTWARE\\YourCompany\\EmailService",
+    RegistryHive.LocalMachine);
 
 // Configurazione Serilog
 Log.Logger = new LoggerConfiguration()
@@ -36,7 +41,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure email service
-builder.Services.Configure<EmailConfig>(builder.Configuration.GetSection("EmailSettings"));
+if (builder.Environment.IsProduction())
+{
+    // Configura la dipendenza dal registro di Windows
+    builder.Services.Configure<EmailConfig>(options =>
+    {
+        options.SmtpServer = builder.Configuration["SmtpServer"] ?? "smtp.gmail.com";
+        options.SmtpPort = int.TryParse(builder.Configuration["SmtpPort"], out int port) ? port : 587;
+        options.Username = builder.Configuration["Username"] ?? "";
+        options.Password = builder.Configuration["Password"] ?? "";
+        options.UseSsl = builder.Configuration["UseSsl"] == "1";
+        options.SenderName = builder.Configuration["SenderName"] ?? "Email Service";
+        options.SenderEmail = builder.Configuration["SenderEmail"] ?? "";
+    });
+}
+else
+{
+    // In development, usa la configurazione dal file appsettings.json
+    builder.Services.Configure<EmailConfig>(builder.Configuration.GetSection("EmailSettings"));
+}
 builder.Services.AddScoped<IEmailService, GmailService>();
 builder.Services.AddScoped<IEmailAttachmentService, EmailAttachmentService>();
 
