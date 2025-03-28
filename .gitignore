@@ -22,4 +22,4 @@ logs/
 *.nupkg
 
 # File di test generati
-TestResults/
+TestResults/**/appsetting.json
