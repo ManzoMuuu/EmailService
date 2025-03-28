@@ -1,4 +1,3 @@
-// src/EmailService.API/Controllers/EmailController.cs
 using EmailService.API.Extensions;
 using EmailService.Core.Interfaces;
 using EmailService.Core.Models;
@@ -45,7 +44,7 @@ namespace EmailService.API.Controllers
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)));
                         
-                return BadRequest(ModelState);
+                return BadRequest(ApiResponse<object>.ErrorResponse("Dati non validi", ModelState));
             }
 
             try
@@ -58,7 +57,7 @@ namespace EmailService.API.Controllers
                 if (string.IsNullOrEmpty(message.To) || !IsValidEmail(message.To))
                 {
                     _logger.LogWarning("Tentativo di invio a indirizzo email non valido: {Recipient}", message.To);
-                    return BadRequest(new { message = "L'indirizzo email del destinatario non è valido" });
+                    return BadRequest(ApiResponse<object>.ErrorResponse("L'indirizzo email del destinatario non è valido"));
                 }
                 
                 // Effettua l'invio dell'email
@@ -67,17 +66,20 @@ namespace EmailService.API.Controllers
                 // Registra il successo dell'operazione
                 _logger.LogEmailSent(message.To, message.Subject);
                 
-                return Ok(new { message = "Email inviata con successo" });
+                return Ok(ApiResponse<object>.SuccessResponse(
+                    new { Recipient = message.To }, 
+                    "Email inviata con successo"
+                ));
             }
             catch (Exception ex)
             {
                 // Registra l'errore con tutti i dettagli disponibili
                 _logger.LogEmailFailed(message.To, message.Subject, ex);
                 
-                return StatusCode(500, new { 
-                    message = "Si è verificato un errore durante l'invio dell'email", 
-                    error = ex.Message 
-                });
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(
+                    "Si è verificato un errore durante l'invio dell'email", 
+                    new { ErrorMessage = ex.Message }
+                ));
             }
         }
 
@@ -94,12 +96,12 @@ namespace EmailService.API.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ApiResponse<object>.ErrorResponse("Dati non validi", ModelState));
             }
 
             if (messages == null || !messages.Any())
             {
-                return BadRequest(new { message = "La lista delle email è vuota" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("La lista delle email è vuota"));
             }
 
             try
@@ -116,10 +118,10 @@ namespace EmailService.API.Controllers
                 if (invalidEmails.Any())
                 {
                     _logger.LogWarning("Batch contiene {Count} indirizzi email non validi", invalidEmails.Count);
-                    return BadRequest(new { 
-                        message = "Alcuni indirizzi email non sono validi", 
-                        invalidEmails 
-                    });
+                    return BadRequest(ApiResponse<object>.ErrorResponse(
+                        "Alcuni indirizzi email non sono validi",
+                        new { InvalidEmails = invalidEmails }
+                    ));
                 }
                 
                 // Invio del batch di email
@@ -128,19 +130,19 @@ namespace EmailService.API.Controllers
                 // Registra il successo dell'operazione
                 _logger.LogBatchCompleted(count);
                 
-                return Ok(new { 
-                    message = $"{count} email inviate con successo",
-                    count
-                });
+                return Ok(ApiResponse<object>.SuccessResponse(
+                    new { Count = count, Recipients = messages.Select(m => m.To).ToList() },
+                    $"{count} email inviate con successo"
+                ));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Errore durante l'invio batch di {Count} email", messages.Count);
                 
-                return StatusCode(500, new { 
-                    message = "Si è verificato un errore durante l'invio delle email", 
-                    error = ex.Message 
-                });
+                return StatusCode(500, ApiResponse<object>.ErrorResponse(
+                    "Si è verificato un errore durante l'invio delle email", 
+                    new { ErrorMessage = ex.Message }
+                ));
             }
         }
 
