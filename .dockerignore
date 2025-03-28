@@ -1,0 +1,46 @@
+# Ignora cartelle di build e bin
+**/bin/
+**/obj/
+**/out/
+
+# Ignora file di log
+**/*.log
+
+# Ignora file sensibili
+**/*.env
+**/appsettings.*.json
+**/launchSettings.json
+
+# Ignora cartelle di sviluppo
+**/.vs/
+**/.vscode/
+**/.idea/
+
+# Ignora i file di git
+**/.git/
+**/.gitignore
+**/.gitattributes
+
+# Ignora i file di Docker
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+
+# Ignora i file di test
+**/TestResults/
+**/[Tt]est[Rr]esult*/
+**/*.Tests.csproj
+**/EmailService.Tests/
+
+# Ignora certificati e chiavi
+**/*.pfx
+**/*.key
+**/*.p12
+
+# Ignora altri file non necessari
+**/*.md
+**/*.bat
+**/*.ps1
+**/*.cmd
+**/README*
+**/LICENSE*

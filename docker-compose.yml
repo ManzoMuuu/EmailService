@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  emailservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: emailservice:latest
+    container_name: emailservice
+    restart: unless-stopped
+    ports:
+      - "5001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - EMAILAPI_EmailSettings__SmtpServer=smtp.gmail.com
+      - EMAILAPI_EmailSettings__SmtpPort=587
+      - EMAILAPI_EmailSettings__UseSsl=true
+      - EMAILAPI_EmailSettings__SenderName=Email Service
+      # Sostituisci questi valori con le tue credenziali reali
+      # oppure usa un file .env
+      - EMAILAPI_EmailSettings__Username=${EMAIL_USERNAME}
+      - EMAILAPI_EmailSettings__Password=${EMAIL_PASSWORD}
+      - EMAILAPI_EmailSettings__SenderEmail=${EMAIL_SENDER}
+    volumes:
+      - emailservice-logs:/app/logs
+
+volumes:
+  emailservice-logs:
+    driver: local
+
+# Uso:
+# 1. Crea un file .env con i seguenti contenuti:
+#   EMAIL_USERNAME=tua-email@gmail.com
+#   EMAIL_PASSWORD=tua-password-app
+#   EMAIL_SENDER=tua-email@gmail.com
+#
+# 2. Esegui:
+#   docker-compose up -d
